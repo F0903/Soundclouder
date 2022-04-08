@@ -12,14 +12,26 @@ public static class API
 
     static readonly Dictionary<ulong, string> cachedMediaStreamUrls = new();
 
-    public static Task<JsonDocument> ReadAsJsonDocumentAsync(this HttpContent content)
+    static T ElementAtOr<T>(this IEnumerable<T> col, Index index, T or)
+    {
+        try
+        {
+            return col.ElementAt(index);
+        }
+        catch (IndexOutOfRangeException)
+        {
+            return or;
+        }
+    }
+
+    static Task<JsonDocument> ReadAsJsonDocumentAsync(this HttpContent content)
     {
         return content.ReadAsStreamAsync().ContinueWith(x => JsonDocument.Parse(x.Result));
     }
 
     public static async Task<string> GetStreamURLAsync(ClientInfo clientInfo, Media media)
     {
-        if(cachedMediaStreamUrls.TryGetValue(media.ID, out var streamUrl)) 
+        if (cachedMediaStreamUrls.TryGetValue(media.ID, out var streamUrl))
             return streamUrl;
 
         string url = $"{media.BaseStreamURL}?client_id={clientInfo.ClientId}&user_id={clientInfo.UserId}&track_authorization={media.TrackAuth}";
@@ -47,6 +59,7 @@ public static class API
         for (int i = 0; i < collection.GetArrayLength(); i++)
         {
             var info = collection[i];
+            var transcodings = info.GetProperty("media").GetProperty("transcodings");
             var media = new Media
             {
                 ID = info.GetProperty("id").GetUInt64(),
@@ -54,7 +67,7 @@ public static class API
                 Author = info.GetProperty("user").GetProperty("username").GetString()!,
                 Genre = info.GetProperty("genre").GetString()!,
                 TrackAuth = info.GetProperty("track_authorization").GetString()!,
-                BaseStreamURL = info.GetProperty("media").GetProperty("transcodings")[0].GetProperty("url").GetString()!,
+                BaseStreamURL = transcodings.EnumerateArray().ElementAtOr(2, transcodings[0]).GetProperty("url").GetString()!,
                 ClientInfo = clientInfo,
             };
             result.Add(media);
