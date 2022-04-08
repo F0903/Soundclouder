@@ -8,11 +8,13 @@ using System.Threading.Tasks;
 using Soundclouder.Logging;
 
 namespace Soundclouder;
+
 public static class API
 {
     static readonly HttpClient client = new();
 
-    static readonly Dictionary<ulong, string> cachedMediaStreamUrls = new();
+    public const int MaxCachedStreams = 50;
+    internal static MediaStreamCache mediaStreamCache = new(MaxCachedStreams);
 
     static T ElementAtOr<T>(this IEnumerable<T> col, Index index, T or)
     {
@@ -31,10 +33,16 @@ public static class API
         return content.ReadAsStreamAsync().ContinueWith(x => JsonDocument.Parse(x.Result));
     }
 
-    public static async Task<string> GetStreamURLAsync(ClientInfo clientInfo, Media media)
+    public static ValueTask ClearMediaStreamCache()
     {
-        if (cachedMediaStreamUrls.TryGetValue(media.ID, out var streamUrl))
-            return streamUrl;
+        mediaStreamCache.Clear();
+        return ValueTask.CompletedTask;
+    }
+
+    internal static async Task<string> GetStreamURLAsync(ClientInfo clientInfo, Media media)
+    {
+        if (mediaStreamCache.TryGetValue(media.ID, out var streamUrl))
+            return streamUrl!;
 
         string url = $"{media.BaseStreamURL}?client_id={clientInfo.ClientId}&user_id={clientInfo.UserId}&track_authorization={media.TrackAuth}";
         using var response = await client.GetAsync(url);
@@ -42,11 +50,11 @@ public static class API
 
         using var doc = await response.Content.ReadAsJsonDocumentAsync();
         streamUrl = doc.RootElement.GetProperty("url").GetRawText();
-        cachedMediaStreamUrls[media.ID] = streamUrl;
+        mediaStreamCache[media.ID] = streamUrl;
         return streamUrl;
     }
 
-    public static async Task<SearchResult> SearchAsync(ClientInfo clientInfo, string query, int searchLimit = 3)
+    internal static async Task<SearchResult> SearchAsync(ClientInfo clientInfo, string query, int searchLimit = 3)
     {
         Log.Info($"Searching for {query}...");
 
