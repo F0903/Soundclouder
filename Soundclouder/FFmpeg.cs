@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Soundclouder.Logging;
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -44,16 +46,16 @@ internal class FFmpeg
     public static async Task DownloadToPath(string path, string url, CancellationToken cancellationToken = default)
     {
         using var proc = StartProcess(url, path);
-        Console.WriteLine("Starting FFmpeg...");
+        Log.Info("Starting FFmpeg...");
         proc.Start();
-        Console.WriteLine("Starting conversion...");
+        Log.Info("Starting conversion...");
         await proc.WaitForExitAsync(cancellationToken);
         var exitCode = proc.ExitCode;
         if (exitCode != 0)
         {
-            Console.Error.WriteLine($"FFmpeg exited with error {exitCode}!");
+            Log.Error($"FFmpeg exited with error {exitCode}!");
             return;
         }
-        Console.WriteLine($"Successfully wrote output to {path}!");
+        Log.Info($"Successfully wrote output to {path}!");
     }
 }

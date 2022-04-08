@@ -5,6 +5,8 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
+using Soundclouder.Logging;
+
 namespace Soundclouder;
 public static class API
 {
@@ -46,11 +48,15 @@ public static class API
 
     public static async Task<SearchResult> SearchAsync(ClientInfo clientInfo, string query, int searchLimit = 3)
     {
+        Log.Info($"Searching for {query}...");
+
         query = query.MakeStringURLFriendly();
 
         string url = $"https://api-v2.soundcloud.com/search?q={query}&user_id={clientInfo.UserId}&client_id={clientInfo.ClientId}&limit={searchLimit}&app_locale=en";
         using var response = await client.GetAsync(url);
         response.EnsureSuccessStatusCode();
+
+        Log.Info($"Found media!");
 
         using var doc = await response.Content.ReadAsJsonDocumentAsync();
         var collection = doc.RootElement.GetProperty("collection");
