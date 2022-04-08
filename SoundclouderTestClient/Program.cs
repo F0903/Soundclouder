@@ -1,6 +1,13 @@
-﻿using Soundclouder;
+﻿using Microsoft.Extensions.Configuration;
+using Soundclouder;
 
-var client = new SearchClient(new ClientInfo { ClientId = "tvr5oyEDbwmNuQSmuNFkGLFrMn5wqT3H", UserId = "823336-646462-507678-448882" });
-var result = await client.SearchAsync("melvv riot");
+using System.Reflection;
+
+var config = new ConfigurationBuilder()
+    .AddUserSecrets(Assembly.GetExecutingAssembly())
+    .Build();
+
+var client = new SearchClient(new ClientInfo { ClientId = config["client_id"], UserId = config["user_id"] });
+var result = await client.SearchAsync("odesza love letter");
 var first = result.First();
 await first.DownloadAsync("./out.ogg");

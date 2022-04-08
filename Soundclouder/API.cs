@@ -54,11 +54,17 @@ public static class API
 
         using var doc = await response.Content.ReadAsJsonDocumentAsync();
         var collection = doc.RootElement.GetProperty("collection");
+        var len = collection.GetArrayLength();
 
+        //TODO: Support playlists/albums.
         List<Media> result = new();
-        for (int i = 0; i < collection.GetArrayLength(); i++)
+        for (int i = 0; i < len; i++)
         {
             var info = collection[i];
+
+            var kind = info.GetProperty("kind").GetString();
+            if (kind != "track") continue;
+
             var transcodings = info.GetProperty("media").GetProperty("transcodings");
             var media = new Media
             {
