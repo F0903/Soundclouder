@@ -22,3 +22,14 @@ media.DownloadAsync("./out.mp3"); // Download and convert your media to your lik
 ```
 
 It's that easy.
+
+### Logging
+
+The library also includes optional logging output via Soundclouder.Logging.Log.
+To use this, simply set the Handler property to a method of your choice.
+```cs
+using Soundclouder.Logging;
+
+Log.Handler += (severity, message) => Console.WriteLine($"[{severity.ToString().ToUpper()}] {message}");
+```
+Done!
