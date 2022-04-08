@@ -11,6 +11,6 @@ var config = new ConfigurationBuilder()
 Log.Handler += (sev, msg) => Console.WriteLine($"[{sev.ToString().ToUpper()}] {msg}");
 
 var client = new SearchClient(new ClientInfo { ClientId = config["client_id"], UserId = config["user_id"] });
-var result = await client.SearchAsync("loosid neo");
+var result = await client.SearchAsync("odesza love letter");
 var first = result.First();
 await first.DownloadAsync("./out.ogg");

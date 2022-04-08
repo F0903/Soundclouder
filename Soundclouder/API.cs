@@ -54,6 +54,36 @@ public static class API
         return streamUrl;
     }
 
+    internal static Task InsertTrackAsync(ICollection<Media> collection, ref JsonElement info, ClientInfo clientInfo)
+    {
+        var transcodings = info.GetProperty("media").GetProperty("transcodings");
+        var media = new Media
+        {
+            ID = info.GetProperty("id").GetUInt64(),
+            Title = info.GetProperty("title").GetString()!,
+            Author = info.GetProperty("user").GetProperty("username").GetString()!,
+            Genre = info.GetProperty("genre").GetString()!,
+            TrackAuth = info.GetProperty("track_authorization").GetString()!,
+            BaseStreamURL = transcodings.EnumerateArray().ElementAtOr(2, transcodings[0]).GetProperty("url").GetString()!,
+            ClientInfo = clientInfo,
+        };
+        collection.Add(media);
+        return Task.CompletedTask;
+    }
+
+    internal static Task InsertPlaylistAsync(ICollection<Media> collection, ref JsonElement info, ClientInfo clientInfo)
+    {
+        var tasks = new List<Task>();
+        var tracks = info.GetProperty("tracks");
+        for (int i = 0; i < tracks.GetArrayLength(); i++)
+        {
+            var track = tracks[i];
+            var task = InsertTrackAsync(collection, ref track, clientInfo);
+            tasks.Add(task);
+        }
+        return Task.WhenAll(tasks);
+    }
+
     internal static async Task<SearchResult> SearchAsync(ClientInfo clientInfo, string query, int searchLimit = 3)
     {
         Log.Info($"Searching for {query}...");
@@ -70,28 +100,24 @@ public static class API
         var collection = doc.RootElement.GetProperty("collection");
         var len = collection.GetArrayLength();
 
-        //TODO: Support playlists/albums.
-        List<Media> result = new();
+        List<Media> tracks = new();
         for (int i = 0; i < len; i++)
         {
             var info = collection[i];
 
             var kind = info.GetProperty("kind").GetString();
-            if (kind != "track") continue;
-
-            var transcodings = info.GetProperty("media").GetProperty("transcodings");
-            var media = new Media
+            switch (kind)
             {
-                ID = info.GetProperty("id").GetUInt64(),
-                Title = info.GetProperty("title").GetString()!,
-                Author = info.GetProperty("user").GetProperty("username").GetString()!,
-                Genre = info.GetProperty("genre").GetString()!,
-                TrackAuth = info.GetProperty("track_authorization").GetString()!,
-                BaseStreamURL = transcodings.EnumerateArray().ElementAtOr(2, transcodings[0]).GetProperty("url").GetString()!,
-                ClientInfo = clientInfo,
-            };
-            result.Add(media);
+                case "track":
+                    await InsertTrackAsync(tracks, ref info, clientInfo);
+                    break;
+                case "playlist":
+                    await InsertPlaylistAsync(tracks, ref info, clientInfo);
+                    break;
+                default:
+                    continue;
+            }
         }
-        return new SearchResult { ReturnedMedia = result };
+        return new SearchResult { ReturnedMedia = tracks };
     }
 }
