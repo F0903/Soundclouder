@@ -44,7 +44,7 @@ public static class API
         if (mediaStreamCache.TryGetValue(media.ID, out var streamUrl))
             return streamUrl!;
 
-        string url = $"{media.BaseStreamURL}?client_id={clientInfo.ClientId}&user_id={clientInfo.UserId}&track_authorization={media.TrackAuth}";
+        string url = $"{media.BaseStreamURL}?client_id={clientInfo.ClientId}&track_authorization={media.TrackAuth}";
         using var response = await client.GetAsync(url);
         response.EnsureSuccessStatusCode();
 
@@ -90,7 +90,7 @@ public static class API
 
         query = query.MakeStringURLFriendly();
 
-        string url = $"https://api-v2.soundcloud.com/search?q={query}&user_id={clientInfo.UserId}&client_id={clientInfo.ClientId}&limit={searchLimit}&app_locale=en";
+        string url = $"https://api-v2.soundcloud.com/search?q={query}&client_id={clientInfo.ClientId}&limit={searchLimit}&app_locale=en";
         using var response = await client.GetAsync(url);
         response.EnsureSuccessStatusCode();
 

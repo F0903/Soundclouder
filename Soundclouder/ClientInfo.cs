@@ -7,6 +7,5 @@ using System.Threading.Tasks;
 namespace Soundclouder;
 public record struct ClientInfo
 {
-    public readonly string ClientId { get; init; }
-    public readonly string UserId { get; init; }
+    public readonly string ClientId { get; init; } 
 }
