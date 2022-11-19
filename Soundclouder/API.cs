@@ -9,6 +9,11 @@ using Soundclouder.Logging;
 
 namespace Soundclouder;
 
+public class MediaNotFoundException : Exception
+{
+    public MediaNotFoundException(string? message = null) : base(message ?? "No media was found.") { }
+}
+
 public static class API
 {
     static readonly HttpClient client = new();
@@ -99,6 +104,11 @@ public static class API
         using var doc = await response.Content.ReadAsJsonDocumentAsync();
         var collection = doc.RootElement.GetProperty("collection");
         var len = collection.GetArrayLength();
+
+        if (len < 1)
+        {
+            throw new MediaNotFoundException();
+        }
 
         List<Media> tracks = new();
         for (int i = 0; i < len; i++)
