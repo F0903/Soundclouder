@@ -11,7 +11,7 @@ Currently, the library is very primitive, and does not currently support things 
 ```cs
 using Soundclouder;
 
-var clientInfo = new ClientInfo { ClientId = "*your client id*", UserId = "*your user id*" };
+var clientInfo = new ClientInfo { ClientId = "*your client id*" };
 var client = new SearchClient(clientInfo);
 
 var searchResult = await client.SearchAsync("*your search query*");
@@ -26,7 +26,7 @@ It's that easy.
 ```cs
 using Soundclouder;
 
-var clientInfo = new ClientInfo { ClientId = "*your client id*", UserId = "*your user id*" };
+var clientInfo = new ClientInfo { ClientId = "*your client id*" };
 var client = new SearchClient(clientInfo);
 
 var searchResult = await client.SearchAsync("*your search query*");
