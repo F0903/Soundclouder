@@ -6,15 +6,22 @@ using System.Threading.Tasks;
 
 namespace Soundclouder;
 //TODO: Include all the other info content as well.
-public record class Media
+public record class Media(string TrackAuth, string BaseStreamURL)
 {
     internal ClientInfo ClientInfo { get; init; }
 
-    internal string TrackAuth { get; init; } = default!;
-    internal string BaseStreamURL { get; init; } = default!;
+    public required string Title { get; init; }
+    public required ulong ID { get; init; }
+    public required string Author { get; init; }
+    public required string Genre { get; init; }
+    public required TimeSpan Duration { get; init; }
+    public required ulong LikesCount { get; init; }
+    public required ulong RepostsCount { get; init; }
+    public required ulong CommentCount { get; init; }
+    public required string LabelName { get; init;}
+    public required string PermaLink { get; init;}
+    public required string WaveformUrl { get; init; }
+    public required string ArtworkUrl { get; init; }
+    public required string ReleaseDate { get; init;}
 
-    public string Title { get; init; } = default!;
-    public ulong ID { get; init; } = default!;
-    public string Author { get; init; } = default!;
-    public string Genre { get; init; } = default!;
 }

@@ -54,7 +54,7 @@ public static class API
         response.EnsureSuccessStatusCode();
 
         using var doc = await response.Content.ReadAsJsonDocumentAsync();
-        streamUrl = doc.RootElement.GetProperty("url").GetRawText();
+        streamUrl = doc.RootElement.GetProperty("url").GetString()!;
         mediaStreamCache[media.ID] = streamUrl;
         return streamUrl;
     }
@@ -62,15 +62,24 @@ public static class API
     internal static Task InsertTrackAsync(ICollection<Media> collection, ref JsonElement info, ClientInfo clientInfo)
     {
         var transcodings = info.GetProperty("media").GetProperty("transcodings");
-        var media = new Media
+        var trackAuth = info.GetProperty("track_authorization").GetString();
+        var baseStreamUrl = transcodings.EnumerateArray().ElementAtOr(2, transcodings[0]).GetProperty("url").GetString();
+        var media = new Media(trackAuth!, baseStreamUrl!)
         {
             ID = info.GetProperty("id").GetUInt64(),
             Title = info.GetProperty("title").GetString()!,
             Author = info.GetProperty("user").GetProperty("username").GetString()!,
             Genre = info.GetProperty("genre").GetString()!,
-            TrackAuth = info.GetProperty("track_authorization").GetString()!,
-            BaseStreamURL = transcodings.EnumerateArray().ElementAtOr(2, transcodings[0]).GetProperty("url").GetString()!,
+            Duration = TimeSpan.FromMilliseconds(info.GetProperty("duration").GetUInt64()),
             ClientInfo = clientInfo,
+            ArtworkUrl = info.GetProperty("artwork_url").GetString()!,
+            CommentCount = info.GetProperty("comment_count").GetUInt64(),
+            LikesCount = info.GetProperty("likes_count").GetUInt64(),
+            LabelName = info.GetProperty("label_name").GetString()!,
+            PermaLink = info.GetProperty("permalink_url").GetString()!,
+            ReleaseDate = info.GetProperty("release_date").GetString()!,
+            RepostsCount = info.GetProperty("reposts_count").GetUInt64(),
+            WaveformUrl = info.GetProperty("waveform_url").GetString()!,
         };
         collection.Add(media);
         return Task.CompletedTask;
