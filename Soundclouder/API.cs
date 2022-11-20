@@ -87,15 +87,18 @@ public static class API
 
     internal static Task InsertPlaylistAsync(ICollection<Media> collection, ref JsonElement info, ClientInfo clientInfo)
     {
-        var tasks = new List<Task>();
-        var tracks = info.GetProperty("tracks");
-        for (int i = 0; i < tracks.GetArrayLength(); i++)
-        {
-            var track = tracks[i];
-            var task = InsertTrackAsync(collection, ref track, clientInfo);
-            tasks.Add(task);
-        }
-        return Task.WhenAll(tasks);
+        return Task.CompletedTask;
+        //TODO
+
+        //var tasks = new List<Task>();
+        //var tracks = info.GetProperty("tracks");
+        //for (int i = 0; i < tracks.GetArrayLength(); i++)
+        //{
+        //    var track = tracks[i];
+        //    var task = InsertTrackAsync(collection, ref track, clientInfo);
+        //    tasks.Add(task);
+        //}
+        //return Task.WhenAll(tasks);
     }
 
     internal static async Task<SearchResult> SearchAsync(ClientInfo clientInfo, string query, int searchLimit = 3)
