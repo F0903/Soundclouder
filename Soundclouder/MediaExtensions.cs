@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 namespace Soundclouder;
 public static class MediaExtensions
 {
-    public static Task<string> GetStreamURLAsync(this Media media) => API.GetStreamURLAsync(media.ClientInfo, media);
+    public static Task<string> GetStreamURLAsync(this Track media) => API.GetStreamURLAsync(media.ClientId, media);
 
-    public static async Task DownloadAsync(this Media media, string path, CancellationToken cancellationToken = default) =>
+    public static async Task DownloadAsync(this Track media, string path, CancellationToken cancellationToken = default) =>
         await FFmpeg.DownloadToPath(path, await media.GetStreamURLAsync(), cancellationToken);
 }

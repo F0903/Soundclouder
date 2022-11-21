@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -12,6 +13,21 @@ namespace Soundclouder;
 public class MediaNotFoundException : Exception
 {
     public MediaNotFoundException(string? message = null) : base(message ?? "No media was found.") { }
+}
+
+public enum ResolveKind
+{
+    Track,
+    Playlist
+}
+
+public record class ResolveResult(ResolveKind Kind);
+public record class TrackResolveResult : ResolveResult
+{
+    public TrackResolveResult() : base(ResolveKind.Track)
+    { }
+
+    public required Track Track { get; init; }
 }
 
 public static class API
@@ -42,14 +58,50 @@ public static class API
     {
         mediaStreamCache.Clear();
         return ValueTask.CompletedTask;
+    } 
+
+    public static async Task<TrackResolveResult> ResolveTrackAsync(JsonElement docRoot, string clientId)
+    {
+        var track = await CreateTrackAsync(docRoot, clientId);
+        return new TrackResolveResult { Track = track };
     }
 
-    internal static async Task<string> GetStreamURLAsync(ClientInfo clientInfo, Media media)
+    public static Task<ResolveResult> ResolvePlaylistAsync(JsonElement docRoot)
+    {
+        //TODO
+        throw new NotImplementedException();
+    }
+
+    public static async Task<ResolveResult> ResolveAsync(string url, string clientId)
+    { 
+        const string baseUrl = "https://api-v2.soundcloud.com/resolve";
+        using var response = await client.GetAsync($"{baseUrl}?url={url}&app_locale=en");
+        response.EnsureSuccessStatusCode();
+
+        using var doc = await response.Content.ReadAsJsonDocumentAsync();
+        var root = doc.RootElement;
+        var kind = root.GetProperty("kind").GetString()!;
+        var enumKind = kind switch
+        {
+            "track" => ResolveKind.Track,
+            "playlist" => ResolveKind.Playlist,
+            _ => throw new UnreachableException()
+        };
+
+        return enumKind switch
+        {
+            ResolveKind.Track => await ResolveTrackAsync(root, clientId),
+            ResolveKind.Playlist => await ResolvePlaylistAsync(root),
+            _ => throw new UnreachableException()
+        };
+    }
+
+    public static async Task<string> GetStreamURLAsync(string clientId, Track media)
     {
         if (mediaStreamCache.TryGetValue(media.ID, out var streamUrl))
             return streamUrl!;
 
-        string url = $"{media.BaseStreamURL}?client_id={clientInfo.ClientId}&track_authorization={media.TrackAuth}";
+        string url = $"{media.BaseStreamURL}?client_id={clientId}&track_authorization={media.TrackAuth}";
         using var response = await client.GetAsync(url);
         response.EnsureSuccessStatusCode();
 
@@ -59,19 +111,19 @@ public static class API
         return streamUrl;
     }
 
-    internal static Task InsertTrackAsync(ICollection<Media> collection, ref JsonElement info, ClientInfo clientInfo)
+    internal static ValueTask<Track> CreateTrackAsync(JsonElement info, string clientId)
     {
         var transcodings = info.GetProperty("media").GetProperty("transcodings");
         var trackAuth = info.GetProperty("track_authorization").GetString();
         var baseStreamUrl = transcodings.EnumerateArray().ElementAtOr(2, transcodings[0]).GetProperty("url").GetString();
-        var media = new Media(trackAuth!, baseStreamUrl!)
+        var track = new Track(trackAuth!, baseStreamUrl!)
         {
             ID = info.GetProperty("id").GetUInt64(),
             Title = info.GetProperty("title").GetString()!,
             Author = info.GetProperty("user").GetProperty("username").GetString()!,
             Genre = info.GetProperty("genre").GetString()!,
             Duration = TimeSpan.FromMilliseconds(info.GetProperty("duration").GetUInt64()),
-            ClientInfo = clientInfo,
+            ClientId = clientId,
             ArtworkUrl = info.GetProperty("artwork_url").GetString()!,
             CommentCount = info.GetProperty("comment_count").GetUInt64(),
             LikesCount = info.GetProperty("likes_count").GetUInt64(),
@@ -81,11 +133,16 @@ public static class API
             RepostsCount = info.GetProperty("reposts_count").GetUInt64(),
             WaveformUrl = info.GetProperty("waveform_url").GetString()!,
         };
-        collection.Add(media);
-        return Task.CompletedTask;
+        return ValueTask.FromResult(track);
     }
 
-    internal static Task InsertPlaylistAsync(ICollection<Media> collection, ref JsonElement info, ClientInfo clientInfo)
+    internal static async Task InsertTrackAsync(ICollection<Track> collection, JsonElement info, string clientId)
+    {
+        var track = await CreateTrackAsync(info, clientId);
+        collection.Add(track); 
+    }
+
+    internal static Task InsertPlaylistAsync(ICollection<Track> collection, JsonElement info, string clientId)
     {
         return Task.CompletedTask;
         //TODO
@@ -101,13 +158,14 @@ public static class API
         //return Task.WhenAll(tasks);
     }
 
-    internal static async Task<SearchResult> SearchAsync(ClientInfo clientInfo, string query, int searchLimit = 3)
+    public static async Task<SearchResult> SearchAsync(string clientId, string query, int searchLimit = 3)
     {
         Log.Info($"Searching for {query}...");
 
         query = query.MakeStringURLFriendly();
 
-        string url = $"https://api-v2.soundcloud.com/search?q={query}&client_id={clientInfo.ClientId}&limit={searchLimit}&app_locale=en";
+        const string baseUrl = "https://api-v2.soundcloud.com/search";
+        string url = $"{baseUrl}?q={query}&client_id={clientId}&limit={searchLimit}&app_locale=en";
         using var response = await client.GetAsync(url);
         response.EnsureSuccessStatusCode();
 
@@ -122,7 +180,7 @@ public static class API
             throw new MediaNotFoundException();
         }
 
-        List<Media> tracks = new();
+        List<Track> tracks = new();
         for (int i = 0; i < len; i++)
         {
             var info = collection[i];
@@ -131,10 +189,10 @@ public static class API
             switch (kind)
             {
                 case "track":
-                    await InsertTrackAsync(tracks, ref info, clientInfo);
+                    await InsertTrackAsync(tracks, info, clientId);
                     break;
                 case "playlist":
-                    await InsertPlaylistAsync(tracks, ref info, clientInfo);
+                    await InsertPlaylistAsync(tracks, info, clientId);
                     break;
                 default:
                     continue;

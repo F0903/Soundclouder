@@ -8,23 +8,25 @@ using System.Collections;
 
 namespace Soundclouder;
 
-public readonly struct SearchResult : IEnumerable<Media>
+public readonly struct SearchResult : IEnumerable<Track>
 {
-    public readonly IReadOnlyCollection<Media> ReturnedMedia { get; init; }
+    public readonly IReadOnlyCollection<Track> ReturnedMedia { get; init; }
 
-    public IEnumerator<Media> GetEnumerator() => ReturnedMedia.GetEnumerator();
+    public IEnumerator<Track> GetEnumerator() => ReturnedMedia.GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
 public class SearchClient
 {
-    readonly ClientInfo clientInfo;
+    readonly string clientId;
 
-    public SearchClient(ClientInfo clientInfo)
+    public SearchClient(string clientId)
     {
-        this.clientInfo = clientInfo;
+        this.clientId = clientId;
     }
 
-    public Task<SearchResult> SearchAsync(string query, int searchLimit = 3) => API.SearchAsync(clientInfo, query, searchLimit);
+    public Task<SearchResult> SearchAsync(string query, int searchLimit = 3) => API.SearchAsync(clientId, query, searchLimit);
+
+    public Task<ResolveResult> ResolveAsync(string url) => API.ResolveAsync(clientId, url);
 }

@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Soundclouder;
 //TODO: Include all the other info content as well.
-public record class Media(string TrackAuth, string BaseStreamURL)
+public record class Track(string TrackAuth, string BaseStreamURL)
 {
-    internal ClientInfo ClientInfo { get; init; }
+    internal string ClientId { get; init; }
 
     public required string Title { get; init; }
     public required ulong ID { get; init; }
