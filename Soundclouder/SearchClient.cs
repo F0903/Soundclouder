@@ -28,5 +28,5 @@ public class SearchClient
 
     public Task<SearchResult> SearchAsync(string query, int searchLimit = 3) => API.SearchAsync(clientId, query, searchLimit);
 
-    public Task<ResolveResult> ResolveAsync(string url) => API.ResolveAsync(clientId, url);
+    public Task<ResolveResult> ResolveAsync(string url) => API.ResolveAsync(url, clientId);
 }

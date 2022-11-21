@@ -75,7 +75,7 @@ public static class API
     public static async Task<ResolveResult> ResolveAsync(string url, string clientId)
     { 
         const string baseUrl = "https://api-v2.soundcloud.com/resolve";
-        using var response = await client.GetAsync($"{baseUrl}?url={url}&app_locale=en");
+        using var response = await client.GetAsync($"{baseUrl}?url={url}&client_id={clientId}&app_locale=en");
         response.EnsureSuccessStatusCode();
 
         using var doc = await response.Content.ReadAsJsonDocumentAsync();
