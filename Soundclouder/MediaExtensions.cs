@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Soundclouder.Entities;
+
 namespace Soundclouder;
 public static class MediaExtensions
 {

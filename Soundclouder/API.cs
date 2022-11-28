@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
+using Soundclouder.Entities;
 using Soundclouder.Logging;
 
 namespace Soundclouder;
@@ -13,21 +14,6 @@ namespace Soundclouder;
 public class MediaNotFoundException : Exception
 {
     public MediaNotFoundException(string? message = null) : base(message ?? "No media was found.") { }
-}
-
-public enum ResolveKind
-{
-    Track,
-    Playlist
-}
-
-public record class ResolveResult(ResolveKind Kind);
-public record class TrackResolveResult : ResolveResult
-{
-    public TrackResolveResult() : base(ResolveKind.Track)
-    { }
-
-    public required Track Track { get; init; }
 }
 
 public static class API
@@ -58,22 +44,22 @@ public static class API
     {
         mediaStreamCache.Clear();
         return ValueTask.CompletedTask;
-    } 
+    }
 
     public static async Task<TrackResolveResult> ResolveTrackAsync(JsonElement docRoot, string clientId)
     {
         var track = await CreateTrackAsync(docRoot, clientId);
         return new TrackResolveResult { Track = track };
-    }
+    } 
 
-    public static Task<ResolveResult> ResolvePlaylistAsync(JsonElement docRoot)
+    public static async Task<PlaylistResolveResult> ResolvePlaylistAsync(JsonElement docRoot, string clientId)
     {
-        //TODO
-        throw new NotImplementedException();
+        var playlist = await CreatePlaylistAsync(docRoot, clientId); 
+        return new PlaylistResolveResult() { Playlist = playlist };
     }
 
     public static async Task<ResolveResult> ResolveAsync(string url, string clientId)
-    { 
+    {
         const string baseUrl = "https://api-v2.soundcloud.com/resolve";
         using var response = await client.GetAsync($"{baseUrl}?url={url}&client_id={clientId}&app_locale=en");
         response.EnsureSuccessStatusCode();
@@ -91,7 +77,7 @@ public static class API
         return enumKind switch
         {
             ResolveKind.Track => await ResolveTrackAsync(root, clientId),
-            ResolveKind.Playlist => await ResolvePlaylistAsync(root),
+            ResolveKind.Playlist => await ResolvePlaylistAsync(root, clientId),
             _ => throw new UnreachableException()
         };
     }
@@ -109,6 +95,50 @@ public static class API
         streamUrl = doc.RootElement.GetProperty("url").GetString()!;
         mediaStreamCache[media.ID] = streamUrl;
         return streamUrl;
+    }
+
+    internal static ValueTask<Playlist> CreatePlaylistAsync(JsonElement element, string clientId)
+    {
+        var trackElems = element.GetProperty("tracks");
+        var trackCount = element.GetProperty("track_count").GetUInt32();
+        var tracks = new List<Track>();
+        trackElems.EnumerateArray().AsParallel().AsOrdered().Take((int)trackCount).ForAll(async (x) =>
+        {
+            Track track;
+            try
+            {
+                track = await CreateTrackAsync(x, clientId);
+            }
+            catch (KeyNotFoundException)
+            {
+                return; // Some playlist tracks have a strange JSON object that isn't like the normal.
+            }
+            tracks.Add(track);
+        });
+        var playlist = new Playlist()
+        {
+            Author = element.GetProperty("user").GetProperty("username").GetString()!,
+            ArtworkUrl = element.GetProperty("artwork_url").GetString()!,
+            CreatedAt = element.GetProperty("created_at").GetString()!,
+            Description = element.GetProperty("description").GetString()!,
+            Duration = TimeSpan.FromMilliseconds(element.GetProperty("duration").GetUInt64()),
+            Genre = element.GetProperty("genre").GetString()!,
+            ID = element.GetProperty("id").GetUInt64(),
+            IsAlbum = element.GetProperty("is_album").GetBoolean(),
+            LabelName = element.GetProperty("label_name").GetString()!,
+            LikesCount = element.GetProperty("likes_count").GetUInt64(),
+            PermaLinkUrl = element.GetProperty("permalink_url").GetString()!,
+            Public = element.GetProperty("public").GetBoolean(),
+            ReleaseDate = element.GetProperty("release_date").GetString()!,
+            RepostsCount = element.GetProperty("reposts_count").GetUInt64(),
+            SetType = element.GetProperty("set_type").GetString()!,
+            TagList = element.GetProperty("tag_list").GetString()!,
+            Title = element.GetProperty("title").GetString()!,
+            TrackCount = trackCount,
+            Tracks = tracks,
+            URI = element.GetProperty("uri").GetString()!,
+        };
+        return ValueTask.FromResult(playlist);
     }
 
     internal static ValueTask<Track> CreateTrackAsync(JsonElement info, string clientId)
@@ -139,30 +169,23 @@ public static class API
     internal static async Task InsertTrackAsync(ICollection<Track> collection, JsonElement info, string clientId)
     {
         var track = await CreateTrackAsync(info, clientId);
-        collection.Add(track); 
+        collection.Add(track);
     }
 
-    internal static Task InsertPlaylistAsync(ICollection<Track> collection, JsonElement info, string clientId)
+    internal static async Task InsertPlaylistAsync(ICollection<Track> collection, JsonElement info, string clientId)
     {
-        return Task.CompletedTask;
-        //TODO
-
-        //var tasks = new List<Task>();
-        //var tracks = info.GetProperty("tracks");
-        //for (int i = 0; i < tracks.GetArrayLength(); i++)
-        //{
-        //    var track = tracks[i];
-        //    var task = InsertTrackAsync(collection, ref track, clientInfo);
-        //    tasks.Add(task);
-        //}
-        //return Task.WhenAll(tasks);
+        var playlist = await CreatePlaylistAsync(info, clientId);
+        foreach (var item in playlist.Tracks)
+        {
+            collection.Add(item);
+        }
     }
 
-    public static async Task<SearchResult> SearchAsync(string clientId, string query, int searchLimit = 3)
+    public static async Task<SearchResult> SearchAsync(string clientId, string query, int searchLimit = 3, ResolveKind? filterKind = null)
     {
         Log.Info($"Searching for {query}...");
 
-        query = query.MakeStringURLFriendly();
+        query = query.UrlFriendlyfy();
 
         const string baseUrl = "https://api-v2.soundcloud.com/search";
         string url = $"{baseUrl}?q={query}&client_id={clientId}&limit={searchLimit}&app_locale=en";
@@ -189,9 +212,11 @@ public static class API
             switch (kind)
             {
                 case "track":
+                    if (filterKind == ResolveKind.Playlist) continue;
                     await InsertTrackAsync(tracks, info, clientId);
                     break;
                 case "playlist":
+                    if (filterKind == ResolveKind.Track) continue;
                     await InsertPlaylistAsync(tracks, info, clientId);
                     break;
                 default:

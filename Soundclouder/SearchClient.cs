@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Net;
 using System.Threading.Tasks;
 using System.Collections;
+using Soundclouder.Entities;
 
 namespace Soundclouder;
 
@@ -26,7 +27,7 @@ public class SearchClient
         this.clientId = clientId;
     }
 
-    public Task<SearchResult> SearchAsync(string query, int searchLimit = 3) => API.SearchAsync(clientId, query, searchLimit);
+    public Task<SearchResult> SearchAsync(string query, int searchLimit = 3, ResolveKind? filterKind = null) => API.SearchAsync(clientId, query, searchLimit, filterKind);
 
     public Task<ResolveResult> ResolveAsync(string url) => API.ResolveAsync(url, clientId);
 }

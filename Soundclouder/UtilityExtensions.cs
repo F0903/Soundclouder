@@ -7,10 +7,54 @@ using System.Threading.Tasks;
 namespace Soundclouder;
 public static class UtilityExtensions
 {
-    public static string MakeStringURLFriendly(this string str)
+    public static string UrlFriendlyfy(this string input)
     {
-        //TODO: Find a better and universal way to do this.
-        var newStr = str.Replace(" ", "%20").Replace("ø", "%C3%B8").Replace("å", "%C3%A5");
-        return newStr;
+        const string colon = "%3B";
+        const string forwardSlash = "%2F";
+        const string hash = "%23";
+        const string questionmark = "%3F";
+        const string ampersand = "%26";
+        const string at = "%40";
+        const string percentage = "%25";
+        const string plus = "%2B";
+        const string whitespace = "%20";
+        var sb = new StringBuilder(input.Length);
+        foreach (var ch in input)
+        {
+            switch (ch)
+            {
+                case ':':
+                    sb.Append(colon);
+                    break;
+                case '/':
+                    sb.Append(forwardSlash);
+                    break;
+                case '#':
+                    sb.Append(hash);
+                    break;
+                case '?':
+                    sb.Append(questionmark);
+                    break;
+                case '&':
+                    sb.Append(ampersand);
+                    break;
+                case '@':
+                    sb.Append(at);
+                    break;
+                case '%':
+                    sb.Append(percentage);
+                    break;
+                case '+':
+                    sb.Append(plus);
+                    break;
+                case ' ':
+                    sb.Append(whitespace);
+                    break;
+                default:
+                    sb.Append(ch);
+                    break;
+            }
+        }
+        return sb.ToString();
     }
 }
