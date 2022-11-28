@@ -8,7 +8,7 @@ namespace Soundclouder;
 //TODO: Include all the other info content as well.
 public record class Track(string TrackAuth, string BaseStreamURL)
 {
-    internal string ClientId { get; init; }
+    internal string? ClientId { get; init; }
 
     public required string Title { get; init; }
     public required ulong ID { get; init; }
