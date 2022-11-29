@@ -1,14 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Soundclouder.Entities;
+﻿namespace Soundclouder.Entities;
 //TODO: Include all the other info content as well.
-public record Track(string TrackAuth, string BaseStreamURL)
+public record Track
 {
+    public Track(string trackAuth, string baseStreamUrl)
+    {
+        TrackAuth = trackAuth;
+        BaseStreamURL= baseStreamUrl;
+    }
+
     internal string? ClientId { get; init; }
+    internal string TrackAuth { get; }
+    internal string BaseStreamURL { get; }
 
     public required string Title { get; init; }
     public required ulong ID { get; init; }
