@@ -31,5 +31,5 @@ public class SearchClient
 
     public Task<ResolveResult> ResolveAsync(string url) => API.ResolveAsync(url, clientId);
 
-    public Task<IReadOnlyCollection<Track>> GetTracksAsync(params string[] ids) => API.GetTracksFromIdAsync(clientId, ids);
+    public Task<IReadOnlyList<Track>> GetTracksAsync(params string[] ids) => API.GetTracksFromIdAsync(clientId, ids);
 }

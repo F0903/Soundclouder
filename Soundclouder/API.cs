@@ -25,36 +25,36 @@ public static class API
     public const int MaxCachedStreams = 50;
     internal static MediaStreamCache mediaStreamCache = new(MaxCachedStreams);
 
-    static T ElementAtOr<T>(this IEnumerable<T> col, Index index, T or)
-    {
-        try
-        {
-            return col.ElementAt(index);
-        }
-        catch (IndexOutOfRangeException)
-        {
-            return or;
-        }
-    }
-
     static Task<JsonDocument> ReadAsJsonDocumentAsync(this HttpContent content)
     {
         return content.ReadAsStreamAsync().ContinueWith(x => JsonDocument.Parse(x.Result));
-    }
+    } 
 
     internal static async ValueTask<Playlist> CreatePlaylistAsync(JsonElement element, string clientId)
     {
         var previewTrackElems = element.GetProperty("tracks");
         var trackCount = element.GetProperty("track_count").GetUInt32();
         var trackIds = new string[trackCount];
-        int trackIndex = 0;
-        previewTrackElems.EnumerateArray().AsParallel().AsOrdered().Take((int)trackCount).ForAll((x) =>
+        for (int i = 0; i < trackCount; i++)
         {
-            var id = x.GetProperty("id").GetUInt32().ToString();
-            trackIds[trackIndex++] = id;
-        });
+            var track = previewTrackElems[i];
+            var id = track.GetProperty("id").GetUInt32().ToString();
+            trackIds[i] = id;
+        }
 
         var tracks = await GetTracksFromIdAsync(clientId, trackIds);
+        var orderedTracks = new List<Track>();
+        for (int i = 0; i < tracks.Count; i++)
+        {
+            var origId = trackIds[i];
+            for (int j = 0; j < tracks.Count; j++)
+            {
+                var track = tracks[j];
+                var newId = track.ID.ToString();
+                if (origId != newId) continue;
+                orderedTracks.Add(track);
+            }
+        }
 
         var playlist = new Playlist()
         {
@@ -76,7 +76,7 @@ public static class API
             TagList = element.GetProperty("tag_list").GetString()!,
             Title = element.GetProperty("title").GetString()!,
             TrackCount = trackCount,
-            Tracks = tracks,
+            Tracks = orderedTracks,
             URI = element.GetProperty("uri").GetString()!,
         };
         return playlist;
@@ -86,7 +86,8 @@ public static class API
     {
         var transcodings = info.GetProperty("media").GetProperty("transcodings");
         var trackAuth = info.GetProperty("track_authorization").GetString();
-        var baseStreamUrl = transcodings.EnumerateArray().ElementAtOr(2, transcodings[0]).GetProperty("url").GetString();
+        //TODO: Make an algorithm for choosing the highest quality stream instead of picking the last.
+        var baseStreamUrl = transcodings.EnumerateArray().Last().GetProperty("url").GetString();
         var track = new Track(trackAuth!, baseStreamUrl!)
         {
             ID = info.GetProperty("id").GetUInt64(),
@@ -132,11 +133,11 @@ public static class API
     {
         var track = await CreateTrackAsync(docRoot, clientId);
         return new TrackResolveResult { Track = track };
-    } 
+    }
 
     public static async Task<PlaylistResolveResult> ResolvePlaylistAsync(JsonElement docRoot, string clientId)
     {
-        var playlist = await CreatePlaylistAsync(docRoot, clientId); 
+        var playlist = await CreatePlaylistAsync(docRoot, clientId);
         return new PlaylistResolveResult() { Playlist = playlist };
     }
 
@@ -177,16 +178,15 @@ public static class API
         streamUrl = doc.RootElement.GetProperty("url").GetString()!;
         mediaStreamCache[media.ID] = streamUrl;
         return streamUrl;
-    } 
+    }
 
-    public static async Task<IReadOnlyCollection<Track>> GetTracksFromIdAsync(string clientId, params string[] trackIds)
+    public static async Task<IReadOnlyList<Track>> GetTracksFromIdAsync(string clientId, params string[] trackIds)
     {
         var sb = new StringBuilder();
         for (int i = 0; i < trackIds.Length; i++)
         {
-            if (i != 0 && i != trackIds.Length - 1)
-                sb.Append("%2C");
-            sb.Append(trackIds[i]); 
+            if (i != 0) sb.Append("%2C");
+            sb.Append(trackIds[i]);
         }
         var idList = sb.ToString();
 
@@ -206,7 +206,7 @@ public static class API
         {
             var track = await CreateTrackAsync(trackElem, clientId);
             tracks.Add(track);
-        } 
+        }
         return tracks;
     }
 
