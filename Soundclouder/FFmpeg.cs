@@ -19,7 +19,7 @@ internal class FFmpeg
 {
     static void AssertFFmpegExists()
     {
-        if (!File.Exists("./ffmpeg.exe"))
+        if (!File.Exists("ffmpeg.exe"))
         {
             throw new FFmpegNotFoundException();
         }
