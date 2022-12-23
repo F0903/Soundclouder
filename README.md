@@ -5,6 +5,8 @@ You only need a client_id, which can be gotten by inspecting intercepted request
 
 Currently, the library is very primitive.
 
+It also includes a convenient test client that can be used standalone to download tracks and playlists from SoundCloud.
+
 ### Examples
 
 #### Basic Stream URL
@@ -18,7 +20,6 @@ var media = searchResult.First(); // Filter your result.
 
 var url = await media.GetStreamURLAsync();
 ```
-It's that easy.
 
 #### Download and Conversion
 **(Requires [FFmpeg.exe](https://ffmpeg.org/download.html) in app directory or PATH!)**
@@ -33,7 +34,6 @@ var media = searchResult.First(); // Filter your result.
 
 await media.DownloadAsync("./out.mp3"); // You can use any path and extension, and ffmpeg will convert automatically.
 ```
-Nothing more needed.
 
 ### Logging
 
@@ -44,4 +44,3 @@ using Soundclouder.Logging;
 
 Log.Handler += (severity, message) => Console.WriteLine($"[{severity.ToString().ToUpper()}] {message}");
 ```
-Done!
