@@ -22,7 +22,7 @@ var url = await media.GetStreamURLAsync();
 It's that easy.
 
 #### Download and Conversion
-**(Requires [FFmpeg.exe](https://ffmpeg.org/download.html) in library dll directory!)**
+**(Requires [FFmpeg.exe](https://ffmpeg.org/download.html) in app directory or PATH!)**
 ```cs
 using Soundclouder;
 
