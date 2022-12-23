@@ -5,7 +5,7 @@ public record Track
     public Track(string trackAuth, string baseStreamUrl)
     {
         TrackAuth = trackAuth;
-        BaseStreamURL= baseStreamUrl;
+        BaseStreamURL = baseStreamUrl;
     }
 
     internal string? ClientId { get; init; }

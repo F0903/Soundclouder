@@ -11,8 +11,7 @@ Currently, the library is very primitive.
 ```cs
 using Soundclouder;
 
-var clientInfo = new ClientInfo { ClientId = "*your client id*" };
-var client = new SearchClient(clientInfo);
+var client = new SearchClient("*your client id*");
 
 var searchResult = await client.SearchAsync("*your search query*");
 var media = searchResult.First(); // Filter your result.

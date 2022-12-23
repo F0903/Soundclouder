@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Soundclouder;
-public static class UtilityExtensions
-{
-    public static string UrlFriendlyfy(this string input)
+
+public static partial class UtilityExtensions
+{ 
+    internal static string UrlFriendlyfy(this string input)
     {
         const string colon = "%3B";
         const string forwardSlash = "%2F";

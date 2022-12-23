@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Soundclouder.Entities;
 
-using Soundclouder.Entities;
+using System.Diagnostics;
 
 namespace Soundclouder;
 public static class MediaExtensions
@@ -13,4 +9,20 @@ public static class MediaExtensions
 
     public static async Task DownloadAsync(this Track media, string path, CancellationToken cancellationToken = default) =>
         await FFmpeg.DownloadToPath(path, await media.GetStreamURLAsync(), cancellationToken);
+
+    public static IReadOnlyCollection<Track> ToTrackList(this Playlist media) => media.Tracks;
+
+    public static IReadOnlyCollection<Track> ToTrackList(this Track media) => new List<Track> { media };
+
+    public static IReadOnlyCollection<Track> ToTrackList(this SearchResult result) => result.ReturnedMedia;
+
+    public static IReadOnlyCollection<Track> ToTrackList(this ResolveResult result)
+    {
+        return result switch
+        {
+            TrackResolveResult tr => tr.ToTrackList(),
+            PlaylistResolveResult pr => pr.Playlist.ToTrackList(),
+            _ => throw new UnreachableException()
+        }; 
+    }
 }

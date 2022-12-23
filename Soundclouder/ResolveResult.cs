@@ -12,7 +12,7 @@ public abstract record class ResolveResult
 {
     public ResolveResult(ResolveKind kind)
     {
-        Kind = kind;   
+        Kind = kind;
     }
 
     public ResolveKind Kind { get; }
@@ -30,5 +30,5 @@ public record class PlaylistResolveResult : ResolveResult
     public PlaylistResolveResult() : base(ResolveKind.Playlist) { }
 
 
-    public required Playlist Playlist { get; init; } 
+    public required Playlist Playlist { get; init; }
 }

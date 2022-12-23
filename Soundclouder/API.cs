@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-
-using Soundclouder.Entities;
+﻿using Soundclouder.Entities;
 using Soundclouder.Logging;
 
-using static System.Net.WebRequestMethods;
+using System.Diagnostics;
+using System.Text;
+using System.Text.Json;
 
 namespace Soundclouder;
 
@@ -28,7 +22,7 @@ public static class API
     static Task<JsonDocument> ReadAsJsonDocumentAsync(this HttpContent content)
     {
         return content.ReadAsStreamAsync().ContinueWith(x => JsonDocument.Parse(x.Result));
-    } 
+    }
 
     internal static async ValueTask<Playlist> CreatePlaylistAsync(JsonElement element, string clientId)
     {
@@ -196,8 +190,7 @@ public static class API
 
         using var response = await client.GetAsync(url);
         response.EnsureSuccessStatusCode();
-
-        Log.Info("Found media!");
+        Log.Debug($"Success response received.");
 
         using var doc = await response.Content.ReadAsJsonDocumentAsync();
         var trackElems = doc.RootElement.EnumerateArray();
@@ -220,8 +213,7 @@ public static class API
         string url = $"{baseUrl}?q={query}&client_id={clientId}&limit={searchLimit}";
         using var response = await client.GetAsync(url);
         response.EnsureSuccessStatusCode();
-
-        Log.Info("Found media!");
+        Log.Debug($"Success response received.");
 
         using var doc = await response.Content.ReadAsJsonDocumentAsync();
         var collection = doc.RootElement.GetProperty("collection");

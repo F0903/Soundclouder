@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Soundclouder;
+﻿namespace Soundclouder;
 internal class MediaStreamCache
 {
     readonly Dictionary<ulong, string> cachedMediaStreamUrls = new();

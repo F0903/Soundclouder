@@ -8,11 +8,11 @@ public record Playlist
     public required string Author { get; init; }
     public required string Description { get; init; }
     public required ulong ID { get; init; }
-    public required string TagList { get; init; } 
+    public required string TagList { get; init; }
     public required string Genre { get; init; }
     public required TimeSpan Duration { get; init; }
     public required ulong LikesCount { get; init; }
-    public required ulong RepostsCount { get; init; } 
+    public required ulong RepostsCount { get; init; }
     public required string LabelName { get; init; }
     public required string PermaLinkUrl { get; init; }
     public required string URI { get; init; }
