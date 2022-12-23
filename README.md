@@ -5,7 +5,7 @@ You only need a client_id, which can be gotten by inspecting intercepted request
 
 Currently, the library is very primitive.
 
-It also includes a convenient test client that can be used standalone to download tracks and playlists from SoundCloud.
+It also includes a convenient test console app, that can be used standalone to download tracks and playlists from SoundCloud.
 
 ### Examples
 
