@@ -1,9 +1,9 @@
 # Soundclouder
 
 A minimal asynchronous client for the SoundCloud API which requires no Auth Key.
-You only need a user_id and a client_id, both of which can be gotten by inspecting intercepted requests under the "network" tab in the developer window from any browser.
+You only need a client_id, which can be gotten by inspecting intercepted requests from SoundCloud under the "network" tab in the developer window from any browser.
 
-Currently, the library is very primitive, and does not currently support things like playlists (although planned).
+Currently, the library is very primitive.
 
 ### Examples
 
