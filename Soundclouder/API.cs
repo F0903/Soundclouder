@@ -139,7 +139,15 @@ public static class API
     {
         const string baseUrl = "https://api-v2.soundcloud.com/resolve";
         using var response = await client.GetAsync($"{baseUrl}?url={url}&client_id={clientId}");
-        response.EnsureSuccessStatusCode();
+        try
+        {
+            response.EnsureSuccessStatusCode();
+        }
+        catch (HttpRequestException ex)
+        {
+            Log.Error(ex.Message);
+            throw;
+        } 
 
         using var doc = await response.Content.ReadAsJsonDocumentAsync();
         var root = doc.RootElement;
