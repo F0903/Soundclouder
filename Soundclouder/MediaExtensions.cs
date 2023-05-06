@@ -20,7 +20,7 @@ public static class MediaExtensions
     {
         return result switch
         {
-            TrackResolveResult tr => tr.ToTrackList(),
+            TrackResolveResult tr => tr.Track.ToTrackList(),
             PlaylistResolveResult pr => pr.Playlist.ToTrackList(),
             _ => throw new UnreachableException()
         }; 
