@@ -1,7 +1,7 @@
 ﻿namespace Soundclouder;
 internal class MediaStreamCache
 {
-    readonly Dictionary<ulong, string> cachedMediaStreamUrls = new();
+    readonly Dictionary<ulong, string> cachedMediaStreamUrls = [];
     readonly int ceiling;
 
     internal MediaStreamCache(int ceiling)

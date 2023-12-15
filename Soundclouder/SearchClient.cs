@@ -13,14 +13,9 @@ public readonly struct SearchResult : IEnumerable<Track>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
-public class SearchClient
+public class SearchClient(string clientId)
 {
-    readonly string clientId;
-
-    public SearchClient(string clientId)
-    {
-        this.clientId = clientId;
-    }
+    readonly string clientId = clientId;
 
     public Task<SearchResult> SearchAsync(string query, int searchLimit = 3, ResolveKind? filterKind = null) => API.SearchAsync(clientId, query, searchLimit, filterKind);
 

@@ -7,9 +7,8 @@ using System.Text.Json;
 
 namespace Soundclouder;
 
-public class MediaNotFoundException : Exception
+public class MediaNotFoundException(string? message = null) : Exception(message ?? "No media was found.")
 {
-    public MediaNotFoundException(string? message = null) : base(message ?? "No media was found.") { }
 }
 
 public static class API
@@ -232,7 +231,7 @@ public static class API
             throw new MediaNotFoundException();
         }
 
-        List<Track> tracks = new();
+        List<Track> tracks = [];
         for (int i = 0; i < len; i++)
         {
             var info = collection[i];
