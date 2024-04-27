@@ -26,8 +26,7 @@ var url = await media.GetStreamURLAsync();
 ```cs
 using Soundclouder;
 
-var clientInfo = new ClientInfo { ClientId = "*your client id*" };
-var client = new SearchClient(clientInfo);
+var client = new SearchClient("*your client id*");
 
 var searchResult = await client.SearchAsync("*your search query*");
 var media = searchResult.First(); // Filter your result.
@@ -37,7 +36,7 @@ await media.DownloadAsync("./out.mp3"); // You can use any path and extension, a
 
 ### Logging
 
-The library also includes optional logging output via Soundclouder.Logging.Log.
+The library also includes very basic optional logging output via Soundclouder.Logging.Log.
 To use this, simply set the Handler property to a method of your choice.
 ```cs
 using Soundclouder.Logging;
